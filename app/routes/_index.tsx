@@ -1,4 +1,12 @@
-import type { MetaFunction } from "@remix-run/node";
+import { redirect, type ActionFunctionArgs, type MetaFunction, json } from "@remix-run/node";
+import { Form, useActionData, useNavigation } from "@remix-run/react";
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const formData = await request.formData()
+	const password = formData.get('password')?.toString()
+  if (password !== '123') return json({ error: 'Wrong password' }, { status: 400 })
+	return redirect('../success')
+}
 
 export const meta: MetaFunction = () => {
   return [
@@ -8,34 +16,26 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
+  const navigation = useNavigation()
+	const isSubmitting = navigation.state === 'submitting'
+
+  const actionData = useActionData<typeof action>()
+	const error = actionData?.error
+
   return (
     <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
       <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+
+      <p>Password: 123</p>
+
+      {!isSubmitting && error && (
+        <p style={{ color: "red" }}>Error: {error}</p>
+      )}
+
+      <Form method="POST">
+        <input type="text" name="password" placeholder="Password" />
+        <button type="submit">Submit</button>
+      </Form>
     </div>
   );
 }
